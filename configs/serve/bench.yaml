@@ -1,0 +1,28 @@
+# Serving benchmark grid for SGLang, vLLM, and Hugging Face generate.
+version: 1
+engines: [sglang, vllm]
+grid:
+  workloads:
+    - { input_len: 512, output_len: 256 }
+    - { input_len: 2048, output_len: 512 }
+  concurrency: [1, 4, 16, 64]
+  num_prompts: 500
+  repetitions: 3
+  seed: 0
+hf:
+  batch_sizes: [1, 8, 32]
+  # prompts per cell; a multiple of every batch size so batches are full
+  num_prompts: 96
+  repetitions: 3
+server:
+  max_model_len: 4096
+  sglang_mem_fraction: 0.85
+  vllm_gpu_memory_utilization: 0.85
+# models measured in every engine; quantized uses online FP8 on Ada and Hopper, AWQ weights otherwise
+models:
+  - { name: teacher_bf16, model: teacher, quantized: false }
+  - { name: teacher_quant, model: teacher, quantized: true }
+  - { name: student_bf16, model: distilled_1_5b, quantized: false }
+  - { name: student_quant, model: distilled_1_5b, quantized: true }
+metrics:
+  percentiles: [50, 95]

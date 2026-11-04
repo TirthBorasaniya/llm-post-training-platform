@@ -55,6 +55,7 @@ class ServerSpec:
     parallel: int = 2
     context_size: int = 4096
     binary: list[str] | None = None
+    env_extra: dict[str, str] = field(default_factory=dict)
 
     def resolved_port(self) -> int:
         """Return the explicit port or the engine default."""
@@ -181,6 +182,7 @@ def build_command(spec: ServerSpec, python: str | None = None) -> list[str]:
 
 def build_env(spec: ServerSpec) -> dict[str, str]:
     """Return environment overrides: GPU pinning for the server process."""
-    if spec.gpu_ids is None:
-        return {}
-    return {"CUDA_VISIBLE_DEVICES": ",".join(str(index) for index in spec.gpu_ids)}
+    env = dict(spec.env_extra)
+    if spec.gpu_ids is not None:
+        env["CUDA_VISIBLE_DEVICES"] = ",".join(str(index) for index in spec.gpu_ids)
+    return env

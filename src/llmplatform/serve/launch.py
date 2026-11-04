@@ -192,6 +192,7 @@ def spec_from_args(args: argparse.Namespace) -> ServerSpec:
         speculative=speculative,
         disaggregation=disaggregation,
         binary=binary,
+        env_extra=dict(item.split("=", 1) for item in args.env),
     )
 
 
@@ -218,6 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--disaggregation-mode", choices=["prefill", "decode"], default=None)
     parser.add_argument("--transfer-backend", default="nixl")
     parser.add_argument("--bootstrap-port", type=int, default=None)
+    parser.add_argument("--env", action="append", default=[], help="extra KEY=VALUE for the server")
     parser.add_argument("--llama-cpp-dir", default=None, help="built llama.cpp checkout")
     parser.add_argument("--log", default="logs/server.log")
     parser.add_argument("--ready-timeout", type=float, default=DEFAULT_READY_TIMEOUT_SECONDS)

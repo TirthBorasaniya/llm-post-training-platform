@@ -1,0 +1,19 @@
+# Agent-style traffic: long shared system prompt and tool schemas, growing turn history.
+version: 1
+source_dir: eval/agent_traces/source
+output: eval/agent_traces/traces.jsonl
+seed: 7
+turns_per_conversation: 6
+conversations: 64
+# words added per turn by the synthetic user message and tool result
+user_words: [20, 60]
+tool_result_words: [120, 400]
+assistant_words: [40, 120]
+max_tokens: 128
+concurrency: [4, 16, 64]
+engines:
+  - { name: sglang_cache_on, engine: sglang, prefix_cache: true }
+  - { name: sglang_cache_off, engine: sglang, prefix_cache: false }
+  - { name: vllm_cache_on, engine: vllm, prefix_cache: true }
+  - { name: vllm_cache_off, engine: vllm, prefix_cache: false }
+models: [teacher, distilled_1_5b]

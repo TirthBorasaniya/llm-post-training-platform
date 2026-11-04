@@ -1,0 +1,11 @@
+# Cost model. The GPU hour price, its source, and its date come from configs/compute.yaml.
+version: 1
+slo:
+  ttft_p95_ms: 500
+  itl_p95_ms: 50
+gpus_per_replica: 1
+# the pair of numbers behind the headline student to teacher ratio
+primary:
+  engine: sglang
+  workload: { input_len: 512, output_len: 256 }
+  precision: bf16
