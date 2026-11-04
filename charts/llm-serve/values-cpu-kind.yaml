@@ -1,0 +1,42 @@
+# Values for a CPU-only deployment of the llama.cpp backend on a local kind cluster.
+#
+# The model is intentionally not set here. Supply the Hub repository, the GGUF
+# file name, and its SHA-256 on the command line:
+#
+#   helm upgrade --install llm-serve charts/llm-serve \
+#     --values charts/llm-serve/values-cpu-kind.yaml \
+#     --set model.repo=<owner>/<name> \
+#     --set model.file=<file>.gguf \
+#     --set model.sha256=<64 hexadecimal characters>
+#
+# Template rendering fails when model.sha256 is empty.
+
+backend: llamacpp
+
+model:
+  repo: ""
+  file: ""
+  sha256: ""
+
+llamacpp:
+  parallel: 2
+  contextSize: 4096
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  threshold: 2
+  cooldownPeriod: 120
+
+serviceMonitor:
+  enabled: true
+  release: kube-prometheus-stack

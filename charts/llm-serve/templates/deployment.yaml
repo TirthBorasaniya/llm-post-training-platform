@@ -1,0 +1,208 @@
+{{- include "llm-serve.validate" . }}
+{{- $port := include "llm-serve.containerPort" . | int }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "llm-serve.fullname" . }}
+  labels:
+    {{- include "llm-serve.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "llm-serve.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "llm-serve.selectorLabels" . | nindent 8 }}
+        llm-serve/backend: {{ .Values.backend }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if eq .Values.backend "llamacpp" }}
+      initContainers:
+        - name: fetch-model
+          image: "{{ .Values.images.init.repository }}:{{ .Values.images.init.tag }}"
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              target=/models/model.gguf
+              partial="${target}.part"
+              verify() {
+                [ -z "${MODEL_SHA256}" ] && return 0
+                echo "${MODEL_SHA256}  $1" | sha256sum -c -
+              }
+              if [ -f "${target}" ] && verify "${target}" >/dev/null 2>&1; then
+                echo "model already present"
+                exit 0
+              fi
+              if [ -z "${MODEL_SHA256}" ]; then
+                echo "warning: no checksum configured, downloaded file is not verified"
+              fi
+              set --
+              if [ -n "${HF_TOKEN:-}" ]; then
+                set -- -H "Authorization: Bearer ${HF_TOKEN}"
+              fi
+              rm -f "${partial}"
+              curl -fL --retry 5 --retry-delay 5 "$@" -o "${partial}" "${MODEL_URL}"
+              if ! verify "${partial}"; then
+                echo "checksum mismatch for ${MODEL_URL}" >&2
+                rm -f "${partial}"
+                exit 1
+              fi
+              mv "${partial}" "${target}"
+              echo "model ready"
+          env:
+            - name: MODEL_URL
+              value: {{ printf "%s/%s/resolve/%s/%s" (trimSuffix "/" .Values.model.endpoint) .Values.model.repo .Values.model.revision .Values.model.file | quote }}
+            - name: MODEL_SHA256
+              value: {{ .Values.model.sha256 | default "" | lower | quote }}
+            {{- if .Values.model.tokenSecret }}
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.model.tokenSecret }}
+                  key: {{ .Values.model.tokenSecretKey }}
+            {{- end }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      {{- end }}
+      containers:
+        - name: server
+          {{- if eq .Values.backend "sglang" }}
+          image: "{{ .Values.images.sglang.repository }}:{{ .Values.images.sglang.tag }}"
+          command:
+            - python3
+            - -m
+            - sglang.launch_server
+          args:
+            - --model-path
+            - {{ default .Values.model.repo .Values.model.path | quote }}
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ $port | quote }}
+            - --enable-metrics
+            {{- range .Values.sglang.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- else }}
+          image: "{{ .Values.images.llamacpp.repository }}:{{ .Values.images.llamacpp.tag }}"
+          args:
+            - -m
+            - /models/model.gguf
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ $port | quote }}
+            - --metrics
+            - --parallel
+            - {{ .Values.llamacpp.parallel | quote }}
+            - -c
+            - {{ .Values.llamacpp.contextSize | quote }}
+            {{- range .Values.llamacpp.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $port }}
+              protocol: TCP
+          {{- if or (eq .Values.backend "sglang") .Values.extraEnv }}
+          env:
+            {{- if eq .Values.backend "sglang" }}
+            - name: HF_HOME
+              value: /models/hf
+            {{- if .Values.model.tokenSecret }}
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.model.tokenSecret }}
+                  key: {{ .Values.model.tokenSecretKey }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+          resources:
+            {{- include "llm-serve.resources" . | nindent 12 }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            {{- if eq .Values.backend "sglang" }}
+            - name: dshm
+              mountPath: /dev/shm
+            {{- end }}
+      volumes:
+        - name: models
+          {{- if .Values.model.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "llm-serve.claimName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if eq .Values.backend "sglang" }}
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.sglang.shmSize }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

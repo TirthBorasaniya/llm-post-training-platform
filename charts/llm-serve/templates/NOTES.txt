@@ -1,0 +1,27 @@
+{{ include "llm-serve.fullname" . }} deployed with the {{ .Values.backend }} backend.
+
+In-cluster endpoint:
+  http://{{ include "llm-serve.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}/v1/chat/completions
+
+Local access:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "llm-serve.fullname" . }} 8080:{{ .Values.service.port }}
+  curl http://127.0.0.1:8080/health
+
+Model delivery
+{{- if eq .Values.backend "llamacpp" }}
+  An init container downloads {{ .Values.model.file }} from the Hub repository
+  {{ .Values.model.repo }} (revision {{ .Values.model.revision }}) into /models/model.gguf and
+  compares its SHA-256 with model.sha256. The pod does not start on a mismatch.
+  Required values: model.repo, model.file, model.sha256.
+  Example:
+    --set model.repo=<owner>/<name> --set model.file=<file>.gguf --set model.sha256=<64 hex characters>
+  Rendering fails when model.sha256 is empty unless model.allowUnverified=true.
+  Private repositories: create a Secret with a Hub token and set model.tokenSecret.
+{{- else }}
+  The sglang backend loads {{ default .Values.model.repo .Values.model.path }} through the server's own
+  Hub client, with HF_HOME set to the model volume, or from a local path when model.path is set.
+  The init container and SHA-256 verification are not used for this backend, which is why
+  model.allowUnverified=true is required. Enable model.persistence to keep downloaded weights.
+{{- end }}
+
+Autoscaling is {{ if .Values.autoscaling.enabled }}enabled: KEDA scales between {{ .Values.autoscaling.minReplicas }} and {{ .Values.autoscaling.maxReplicas }} replicas on {{ default (printf "sum(%s)" (include "llm-serve.queueMetric" .)) .Values.autoscaling.query }} with threshold {{ .Values.autoscaling.threshold }}.{{ else }}disabled.{{ end }}

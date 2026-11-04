@@ -1,0 +1,13 @@
+apiVersion: v2
+name: llm-serve
+description: OpenAI-compatible LLM serving with a llama.cpp (CPU) or SGLang (GPU) backend, Prometheus metrics, and queue-depth autoscaling through KEDA.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"
+keywords:
+  - llm
+  - inference
+  - llama.cpp
+  - sglang
+  - keda

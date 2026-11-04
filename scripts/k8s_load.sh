@@ -33,6 +33,7 @@ the replica count, the ready replica count, and the backend queue metric from Pr
 Outputs (under ${OUT_DIR}/):
   k8s_timeseries.jsonl   one JSON object per sample: ts, replicas, ready_replicas, queue_depth
   k6_summary.json        the k6 end-of-test summary
+  k6_requests.jsonl      one JSON object per request: end_ms, duration_ms, status, tokens, vus
 
 Environment:
   RELEASE, NAMESPACE   release name and namespace of the chart (defaults: ${RELEASE}, ${NAMESPACE})
@@ -87,7 +88,7 @@ spec:
       containers:
         - name: k6
           image: ${K6_IMAGE}
-          args: ["run", "/scripts/chat_ramp.js"]
+          args: ["run", "--log-format", "raw", "/scripts/chat_ramp.js"]
           env:
             - name: TARGET_URL
               value: http://${RELEASE}.${NAMESPACE}.svc/v1/chat/completions
@@ -142,7 +143,7 @@ main() {
     echo "+ kubectl apply -f - (Job ${JOB_NAME}, image ${K6_IMAGE}, MAX_VUS=${MAX_VUS}, DURATION_MINUTES=${DURATION_MINUTES})"
     echo "+ sample every ${SAMPLE_SECONDS}s into ${series}: replicas, ready_replicas, queue_depth (${BACKEND})"
     run kubectl -n "${NAMESPACE}" wait --for=condition=complete "job/${JOB_NAME}" --timeout="${timeout_seconds}s"
-    echo "+ kubectl -n ${NAMESPACE} logs job/${JOB_NAME} | extract summary into ${summary}"
+    echo "+ kubectl -n ${NAMESPACE} logs job/${JOB_NAME} | extract summary and requests into ${OUT_DIR}"
     return 0
   fi
 
@@ -165,6 +166,7 @@ main() {
   kubectl -n "${NAMESPACE}" logs "job/${JOB_NAME}" > "${OUT_DIR}/k6_job.log" || true
   sed -n '/^K6_SUMMARY_BEGIN$/,/^K6_SUMMARY_END$/p' "${OUT_DIR}/k6_job.log" \
     | sed -e '1d' -e '$d' > "${summary}"
+  sed -n 's/^K6_REQ //p' "${OUT_DIR}/k6_job.log" > "${OUT_DIR}/k6_requests.jsonl"
   echo "time series: ${series}"
   echo "k6 summary: ${summary}"
   return "${status}"

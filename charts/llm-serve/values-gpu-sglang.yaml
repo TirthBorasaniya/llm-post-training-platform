@@ -1,0 +1,49 @@
+# Values for a single-GPU deployment of the SGLang backend.
+#
+# SGLang downloads the model snapshot itself through its Hub client, so the
+# checksum verification used by the llamacpp backend does not apply and
+# allowUnverified must be true. Set model.repo, or model.path for a model that is
+# already present in the image or on a mounted volume:
+#
+#   helm upgrade --install llm-serve charts/llm-serve \
+#     --values charts/llm-serve/values-gpu-sglang.yaml \
+#     --set model.repo=<owner>/<name>
+
+backend: sglang
+
+model:
+  repo: ""
+  path: ""
+  allowUnverified: true
+  # Keep downloaded weights across pod restarts by enabling a PVC
+  persistence:
+    enabled: false
+
+sglang:
+  extraArgs: []
+  # Optional online FP8 quantization on supported GPUs:
+  # extraArgs:
+  #   - --quantization
+  #   - fp8
+
+resources:
+  requests:
+    cpu: "4"
+    memory: 16Gi
+  limits:
+    nvidia.com/gpu: 1
+
+# Leave empty unless the cluster taints or labels its GPU nodes
+nodeSelector: {}
+tolerations: []
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  threshold: 2
+  cooldownPeriod: 120
+
+serviceMonitor:
+  enabled: true
+  release: kube-prometheus-stack

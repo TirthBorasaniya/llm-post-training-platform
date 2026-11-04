@@ -1,0 +1,17 @@
+{{- if and .Values.model.persistence.enabled (not .Values.model.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "llm-serve.claimName" . }}
+  labels:
+    {{- include "llm-serve.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.model.persistence.accessModes | nindent 4 }}
+  {{- if .Values.model.persistence.storageClassName }}
+  storageClassName: {{ .Values.model.persistence.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.model.persistence.size }}
+{{- end }}
