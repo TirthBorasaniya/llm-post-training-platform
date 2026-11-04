@@ -1,0 +1,10 @@
+# weight-only quantization and GGUF conversion helpers
+gguf==0.19.0
+httpx==0.28.1
+huggingface-hub==2.4.0
+llmcompressor==0.15.0
+numpy==2.4.6
+pydantic==2.14.2
+pydantic-settings==2.16.2
+pyyaml==6.0.3
+sentencepiece==0.2.2

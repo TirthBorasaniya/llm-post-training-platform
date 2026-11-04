@@ -1,0 +1,16 @@
+.git
+.planning
+.claude
+CLAUDE.md
+.env
+.env.*
+.venv
+.cache
+.tmp
+.kube
+data
+models
+checkpoints
+mlruns
+logs
+results/smoke

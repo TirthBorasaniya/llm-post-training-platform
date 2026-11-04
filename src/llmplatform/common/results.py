@@ -1,5 +1,6 @@
 """Results file schema, construction, validation, and writing."""
 
+import os
 import platform
 import subprocess
 from datetime import UTC, datetime
@@ -19,6 +20,7 @@ SCHEMA_VERSION = 1
 GIT_TIMEOUT_SECONDS = 20
 RUN_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+RUNTIME_ENV_VAR = "LLMPLATFORM_ENV_MODE"
 
 
 # ============= Models =============
@@ -30,6 +32,7 @@ class Environment(BaseModel):
     python: str
     packages: dict[str, str]
     hardware: HardwareRecord
+    runtime: str | None = None
 
 
 class ResultsFile(BaseModel):
@@ -146,7 +149,10 @@ def build_results(
         config_path=config.path,
         config_sha256=config.sha256,
         environment=Environment(
-            python=platform.python_version(), packages=packages, hardware=hardware
+            python=platform.python_version(),
+            packages=packages,
+            hardware=hardware,
+            runtime=os.environ.get(RUNTIME_ENV_VAR),
         ),
         metrics=metrics,
         notes=notes,

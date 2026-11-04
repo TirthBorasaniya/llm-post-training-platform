@@ -1,0 +1,5 @@
+# SGLang server, benchmark client, and prefill and decode router
+sglang[all]==0.5.23
+pydantic-settings
+sglang-router==0.3.2
+nixl==1.5.2

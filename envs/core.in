@@ -1,0 +1,6 @@
+# platform package without machine learning dependencies
+httpx==0.28.1
+numpy==2.4.6
+pydantic==2.14.2
+pydantic-settings==2.16.2
+pyyaml==6.0.3

@@ -1,0 +1,11 @@
+# lm-evaluation-harness with the Hugging Face backend
+accelerate==1.15.0
+datasets==5.1.0
+httpx==0.28.1
+lm-eval==0.4.13
+numpy==2.4.6
+pydantic==2.14.2
+pydantic-settings==2.16.2
+pyyaml==6.0.3
+torch==2.15.0
+transformers==5.22.1

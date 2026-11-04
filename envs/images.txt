@@ -1,0 +1,3 @@
+# container fallback when a serving environment cannot be installed: name, image reference
+serve-sglang docker://lmsysorg/sglang:v0.5.23
+serve-vllm docker://vllm/vllm-openai:v0.33.0

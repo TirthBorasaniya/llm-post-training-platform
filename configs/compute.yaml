@@ -1,0 +1,63 @@
+# Compute backend selection. Every heavy job reads this file; nothing else names a machine.
+version: 1
+
+# backend: slurm submits through sbatch; local runs the job body directly on this machine
+backend: local
+
+# free-text label stored in every results file, for example "slurm cluster" or "rented VM"
+provider_label: unspecified
+
+# price per GPU hour used for cost figures; results with GPUs refuse to be written while null
+gpu_hourly_usd: null
+price_source: null
+price_date: null
+
+# optional override when nvidia-smi is not visible to the job
+gpu_model: null
+
+# directory for environments, caches, datasets, and checkpoints; PLATFORM_ROOT overrides it
+work_root: ~/llmplatform
+
+slurm:
+  partition: null
+  cpu_partition: null
+  smoke_partition: null
+  gpu_type: null
+  max_gpus_per_job: 1
+  time_limit: "08:00:00"
+  smoke_time_limit: "00:30:00"
+  cpus_per_gpu: 8
+  mem_per_gpu_gb: 64
+  account: null
+  qos: null
+  extra_args: []
+  max_chain: 6
+
+local:
+  max_gpus: null
+  time_limit_hours: 8
+  max_restarts: 6
+  use_docker: false
+  docker_image: llm-platform:local
+  docker_extra_args: []
+
+# default resources per job body in jobs/
+jobs:
+  setup_envs: { gpus: 0 }
+  env_info: { gpus: 0 }
+  data: { gpus: 0 }
+  train: { gpus: 1 }
+  scaling: { gpus: 1 }
+  merge: { gpus: 1 }
+  eval: { gpus: 1 }
+  generate: { gpus: 1 }
+  teacher_gen: { gpus: 1 }
+  distill: { gpus: 1 }
+  sft_baseline: { gpus: 1 }
+  quantize: { gpus: 1 }
+  gguf: { gpus: 0 }
+  serve_bench: { gpus: 1 }
+  agent_bench: { gpus: 1 }
+  speculative: { gpus: 1 }
+  disagg: { gpus: 2 }
+  smoke: { gpus: 1 }

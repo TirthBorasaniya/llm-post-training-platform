@@ -1,0 +1,15 @@
+# QLoRA SFT, DPO, ORPO, SimPO with DeepSpeed ZeRO-2
+accelerate==1.15.0
+bitsandbytes==0.50.2
+datasets==5.1.0
+deepspeed==0.19.9
+httpx==0.28.1
+mlflow-skinny==3.18.0
+numpy==2.4.6
+peft==0.21.2
+pydantic==2.14.2
+pydantic-settings==2.16.2
+pyyaml==6.0.3
+torch==2.15.0
+transformers==5.22.1
+trl==1.17.1
