@@ -57,6 +57,9 @@ jobs:
   quantize: { gpus: 1 }
   eval_variant: { gpus: 1 }
   gguf: { gpus: 0 }
+  judge: { gpus: 0 }
+  e3: { gpus: 0 }
+  publish: { gpus: 0 }
   serve_bench: { gpus: 1 }
   agent_bench: { gpus: 1 }
   speculative: { gpus: 1 }

@@ -179,3 +179,43 @@ def test_gitignore_covers_local_artifacts(root: Path) -> None:
     text = (root / ".gitignore").read_text(encoding="utf-8")
     for entry in [".env", ".venv/", "/data/", "/models/", "/logs/", "/mlruns/", ".cache/"]:
         assert entry in text, entry
+
+
+def test_no_hostnames_addresses_or_emails(root: Path) -> None:
+    ip_pattern = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+    email_pattern = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
+    allowed_ips = {"127.0.0.1", "0.0.0.0"}  # noqa: S104 - loopback and bind-all literals only
+    hit_list = []
+    for path in text_files(root):
+        if path.parent.name == "envs" and path.suffix == ".txt":
+            continue  # pinned requirement files hold four-part version numbers
+        text = read_text(path)
+        if text is None:
+            continue
+        for number, line in enumerate(text.splitlines(), start=1):
+            ips = set(ip_pattern.findall(line)) - allowed_ips
+            if ips or email_pattern.search(line):
+                hit_list.append(f"{path.relative_to(root)}:{number}")
+    assert hit_list == []
+
+
+def test_private_paths_are_not_in_gitignore(root: Path) -> None:
+    lines = [line.strip() for line in (root / ".gitignore").read_text().splitlines()]
+    for entry in (".planning/", ".planning", "CLAUDE.md", ".claude/", ".claude"):
+        assert entry not in lines, entry
+
+
+def test_private_paths_present_in_a_checkout_are_excluded_locally(root: Path) -> None:
+    exclude = root / ".git" / "info" / "exclude"
+    present = [name for name in (".planning/", "CLAUDE.md", ".claude/") if (root / name).exists()]
+    if not present:
+        return
+    assert exclude.is_file(), "private paths exist but there is no local exclude file"
+    lines = exclude.read_text().splitlines()
+    for entry in present:
+        assert entry in lines, entry
+
+
+def test_every_workflow_job_skips_cleanly_without_secrets(root: Path) -> None:
+    for path in sorted((root / ".github/workflows").glob("*.yml")):
+        assert "secrets." not in path.read_text(), f"{path.name} reads a secret unguarded"

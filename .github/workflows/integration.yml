@@ -1,0 +1,27 @@
+name: integration
+
+# Tiny-model tests and the CPU smoke pipeline. Manual until the workflow has passed once.
+# The Hub tokenizer is public, so no secret is needed; the GGUF step runs only when a llama.cpp
+# checkout is configured, so it is skipped here.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tiny-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: "0.13.7"
+          python-version: "3.11"
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra ml
+      - name: Tiny-model tests
+        run: uv run pytest -m slow tests/e2e
+      - name: CPU smoke pipeline
+        run: uv run python scripts/smoke.py
