@@ -218,3 +218,13 @@ def test_judge_prompt_file_when_present(root: Path) -> None:
     assert len(rows) == config.judge.n_prompts
     assert len({row["id"] for row in rows}) == len(rows)
     assert all(row["prompt"].strip() for row in rows)
+
+
+def test_models_cli_resolves_for_shell(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from llmplatform.common.models import main
+
+    monkeypatch.setenv("CKPT_ROOT", "/ckpt")
+    assert main(["resolve", "teacher"]) == 0
+    assert capsys.readouterr().out.strip() == "/ckpt/teacher/merged"

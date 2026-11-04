@@ -1,0 +1,57 @@
+# On-policy distillation of the aligned 7B teacher into the 1.5B student with reverse KL.
+version: 1
+seed: 42
+models:
+  teacher: teacher
+  student: base_1_5b
+data:
+  file: distillation_prompts.jsonl
+  max_prompts: 20000
+optim:
+  learning_rate: 1.0e-6
+  alternative_learning_rate: 3.0e-6
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  num_train_epochs: 1
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+generation:
+  max_completion_length: 1024
+  temperature: 1.0
+  beta: 1.0
+vllm:
+  # auto uses colocated vLLM generation when the package is importable
+  enabled: auto
+  mode: colocate
+  gpu_memory_utilization: 0.3
+student_training:
+  # full fine-tuning needs an 80 GB or larger GPU; lora is the documented fallback
+  mode: full
+  # explicit weight dtype; the trainer would otherwise load string-specified models in float32
+  dtype: bfloat16
+  lora_r: 64
+  lora_alpha: 128
+  lora_dropout: 0.05
+  lora_target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+  train_lm_head: false
+checkpointing:
+  # a checkpoint is written whenever this many minutes passed since the last one
+  save_every_minutes: 40
+  save_total_limit: 2
+  logging_steps: 5
+clipped_ratio:
+  max: 0.05
+  window: 10
+vocab_check:
+  prompts: 50
+  max_length: 256
+  atol_float32: 1.0e-4
+  atol_half: 0.125
+output:
+  subdir: distill
+tracking:
+  enabled: true
+  experiment: llmplatform-distillation

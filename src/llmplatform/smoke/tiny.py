@@ -8,8 +8,6 @@ from typing import Any
 
 DEFAULT_TOKENIZER_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 TOKENIZER_DIR_ENV = "LLMPLATFORM_TOKENIZER_DIR"
-EOS_TOKEN_ID = 151645
-BOS_TOKEN_ID = 151643
 # padded embedding sizes of the real 1.5B and 7B models
 STUDENT_PADDED_VOCAB = 151936
 TEACHER_PADDED_VOCAB = 152064
@@ -79,8 +77,8 @@ def build_tiny_model(
         num_key_value_heads=2,
         max_position_embeddings=2048,
         tie_word_embeddings=o_tie_embeddings,
-        bos_token_id=BOS_TOKEN_ID,
-        eos_token_id=EOS_TOKEN_ID,
+        bos_token_id=tok.bos_token_id if tok.bos_token_id is not None else tok.eos_token_id,
+        eos_token_id=tok.eos_token_id,
         pad_token_id=tok.pad_token_id,
     )
     model = Qwen2ForCausalLM(config)

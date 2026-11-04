@@ -1,5 +1,7 @@
 """Model registry: pinned Hub models and checkpoint paths produced by earlier stages."""
 
+import argparse
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -91,3 +93,23 @@ def resolve_model(config: ModelsConfig, name: str, ckpt_root: str | Path) -> str
 def revision_of(config: ModelsConfig, name: str) -> str | None:
     """Return the pinned revision of a hub model, or ``None`` for local checkpoints."""
     return config.models[config.roles.get(name, name)].revision
+
+
+# ============= CLI =============
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Print the location of a registry model for shell scripts: ``resolve NAME``."""
+    parser = argparse.ArgumentParser(description="Query the model registry.")
+    sub = parser.add_subparsers(dest="command", required=True)
+    resolve = sub.add_parser("resolve", help="print the path or Hub id of a model")
+    resolve.add_argument("name")
+    args = parser.parse_args(argv)
+    work = Path(os.environ.get("PLATFORM_ROOT", "~/llmplatform")).expanduser()
+    ckpt_root = os.environ.get("CKPT_ROOT", str(work / "checkpoints"))
+    print(resolve_model(load_models(), args.name, ckpt_root))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -14,6 +14,7 @@ from llmplatform.eval.config import E1Config
 E1_DIRNAME = "e1"
 SUMMARY_NAME = "e1_summary.json"
 SECTIONS = ("benchmarks", "judge")
+PAIRWISE_DIRNAME = "e3"
 
 
 # ============= Checkpoint files =============
@@ -113,3 +114,32 @@ def write_summary(
     )
     write_results(Path(results_root) / SUMMARY_NAME, result)
     return result
+
+
+# ============= Pairwise files =============
+
+
+def pairwise_path(results_root: str | Path, candidate: str, reference: str) -> Path:
+    """Return ``results/e3/pairwise_<candidate>_vs_<reference>.json``."""
+    return Path(results_root) / PAIRWISE_DIRNAME / f"pairwise_{candidate}_vs_{reference}.json"
+
+
+def write_pairwise_file(
+    results_root: str | Path,
+    candidate: str,
+    reference: str,
+    values: dict[str, Any],
+    config: ConfigRef,
+    hardware: HardwareRecord,
+    packages: dict[str, str],
+) -> Path:
+    """Write the judgment of a candidate against a non-default reference."""
+    result = build_results(
+        f"pairwise_{candidate}_vs_{reference}",
+        {"candidate": candidate, "reference": reference, "judge": values},
+        config,
+        hardware,
+        packages,
+        notes=f"judge {values.get('judge_model', '')}",
+    )
+    return write_results(pairwise_path(results_root, candidate, reference), result)

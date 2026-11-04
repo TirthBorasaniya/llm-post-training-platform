@@ -14,7 +14,7 @@ from llmplatform.common.models import load_models, resolve_model, revision_of
 from llmplatform.common.paths import repo_root, results_dir
 from llmplatform.common.settings import get_settings
 from llmplatform.eval.config import load_benchmarks, load_e1, load_judge_config
-from llmplatform.eval.e1 import update_checkpoint_file, write_summary
+from llmplatform.eval.e1 import update_checkpoint_file, write_pairwise_file, write_summary
 from llmplatform.eval.generate import generate_hf, generate_openai, save_responses
 from llmplatform.eval.lm_eval_runner import choose_backend, run_task
 from llmplatform.judge.groq_client import JudgeClient
@@ -122,13 +122,26 @@ def cmd_judge(args: argparse.Namespace) -> int:
         args.limit,
     )
     metrics["reference"] = reference
+    ref = config_ref(root / "configs/eval/judge.yaml", root)
+    hardware = hardware_record(load_compute())
+    if reference != config.reference:
+        write_pairwise_file(
+            results_dir(root),
+            args.candidate,
+            reference,
+            metrics,
+            ref,
+            hardware,
+            package_versions(PACKAGES),
+        )
+        return 0
     update_checkpoint_file(
         results_dir(root),
         args.candidate,
         "judge",
         metrics,
-        config_ref(root / "configs/eval/judge.yaml", root),
-        hardware_record(load_compute()),
+        ref,
+        hardware,
         package_versions(PACKAGES),
         notes=f"judge {config.judge_model}, reference {reference}",
     )

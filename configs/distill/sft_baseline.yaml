@@ -1,0 +1,35 @@
+# Student SFT on teacher completions, stopped at the GPU-hours the distillation run used.
+version: 1
+seed: 42
+models:
+  student: base_1_5b
+generation:
+  # teacher completions for the distillation prompts, produced through an OpenAI-compatible server
+  prompts_file: distillation_prompts.jsonl
+  output_file: teacher_completions.jsonl
+  temperature: 0.7
+  max_tokens: 1024
+  concurrency: 64
+  keep_truncated: false
+optim:
+  learning_rate: 1.0e-5
+  lr_scheduler_type: constant_with_warmup
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  # epochs are an upper bound; training stops at the GPU-hours budget
+  num_train_epochs: 20
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  gradient_checkpointing: true
+lengths:
+  max_length: 2048
+checkpointing:
+  save_every_minutes: 40
+  save_total_limit: 2
+  logging_steps: 10
+output:
+  subdir: sft_baseline
+tracking:
+  enabled: true
+  experiment: llmplatform-distillation
