@@ -1,0 +1,24 @@
+# Paths never sent to the remote machine. One rsync pattern per line.
+.planning/
+CLAUDE.md
+.claude/
+.env
+.env.*
+.venv/
+.cache/
+.tmp/
+.kube/
+node_modules/
+data/
+models/
+mlruns/
+checkpoints/
+.git/
+.DS_Store
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+# produced on the remote machine and fetched with make pull-results
+logs/
+results/smoke/

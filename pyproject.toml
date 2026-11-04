@@ -1,0 +1,82 @@
+[build-system]
+requires = ["uv_build==0.13.7"]
+build-backend = "uv_build"
+
+[project]
+name = "llm-post-training-platform"
+version = "0.1.0"
+description = "Reproducible alignment, distillation, quantization, and serving platform for open language models."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Tirth Borasaniya" }]
+requires-python = "==3.11.*"
+dependencies = [
+    "httpx==0.28.1",
+    "numpy==2.4.6",
+    "pydantic==2.14.2",
+    "pydantic-settings==2.16.2",
+    "pyyaml==6.0.3",
+]
+
+[project.optional-dependencies]
+# training, distillation, and tiny-model smoke tests on one machine
+ml = [
+    "accelerate==1.15.0",
+    "datasets==5.1.0",
+    "huggingface-hub==2.4.0",
+    "peft==0.21.2",
+    "safetensors==0.8.0",
+    "tokenizers==0.23.3",
+    "torch==2.15.0",
+    "transformers==5.22.1",
+    "trl==1.17.1",
+]
+
+[dependency-groups]
+dev = [
+    "detect-secrets==1.5.0",
+    "mypy==2.4.1",
+    "pre-commit==4.7.0",
+    "pytest==9.2.0",
+    "pytest-timeout==2.4.0",
+    "ruff==0.17.3",
+    "types-pyyaml==6.0.12.20261103",
+]
+
+[tool.uv.build-backend]
+module-name = "llmplatform"
+module-root = "src"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".planning", ".claude", "charts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "N"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["llmplatform"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra -m 'not integration and not e2e and not slow and not gpu'"
+timeout = 600
+markers = [
+    "unit: fast tests without heavy dependencies",
+    "integration: tests needing external tools or services",
+    "e2e: end-to-end pipeline tests",
+    "slow: tests that train or download tiny models",
+    "gpu: tests that need a GPU",
+]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "tests"]
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true

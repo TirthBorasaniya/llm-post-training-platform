@@ -25,3 +25,13 @@ node_modules/
 .DS_Store
 .idea/
 .vscode/
+.sync_sha
+/checkpoints/
+/outputs/
+/results/smoke/
+*.gguf
+*.safetensors
+*.pt
+*.sif
+mlruns/
+.secrets/
