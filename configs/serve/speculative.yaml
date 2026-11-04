@@ -1,0 +1,23 @@
+# Speculative decoding of the teacher with draft models, SGLang STANDALONE mode.
+version: 1
+target: teacher
+drafts: [base_1_5b, distilled_1_5b]
+# with top-k 1 SGLang verifies steps + 1 tokens, so steps = draft_tokens - 1
+draft_tokens: [3, 5, 8]
+topk: 1
+concurrency: [1, 4, 16]
+# fp8 is measured only where the GPU supports it
+precisions: [bf16, fp8]
+traffic:
+  prompts_file: eval/judge_prompts.jsonl
+  requests_per_cell: 150
+  max_tokens: 256
+  temperature: 0.0
+  repetitions: 3
+equality:
+  prompts: 50
+  max_tokens: 128
+server:
+  mem_fraction: 0.8
+  max_model_len: 4096
+output_subdir: speculative

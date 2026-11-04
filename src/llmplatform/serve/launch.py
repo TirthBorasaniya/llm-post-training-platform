@@ -78,39 +78,40 @@ def wait_for_health(
 # ============= Process =============
 
 
-class ManagedServer:
-    """Context manager owning one server process and its log file."""
+class ManagedProcess:
+    """Context manager owning one background process, its log file, and its readiness probe."""
 
     def __init__(
         self,
-        spec: ServerSpec,
+        command: list[str],
+        health_url: str,
         log_path: str | Path,
+        env: dict[str, str] | None = None,
         ready_timeout: float = DEFAULT_READY_TIMEOUT_SECONDS,
-        python: str | None = None,
     ) -> None:
-        self.spec = spec
+        self.command = command
+        self.health_url = health_url
         self.log_path = Path(log_path)
+        self.env = env or {}
         self.ready_timeout = ready_timeout
-        self.python = python
         self.process: subprocess.Popen[bytes] | None = None
         self._log_handle: BinaryIO | None = None
 
     def start(self) -> None:
         """Launch the process in its own session and wait until it is healthy."""
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        command = build_command(self.spec, self.python)
-        logger.info("starting server", extra={"command": " ".join(command)})
+        logger.info("starting process", extra={"command": " ".join(self.command)})
         log_handle = open(self.log_path, "ab")  # noqa: SIM115 - closed in stop()
         self._log_handle = log_handle
         self.process = subprocess.Popen(
-            command,
+            self.command,
             stdout=log_handle,
             stderr=subprocess.STDOUT,
-            env={**os.environ, **build_env(self.spec)},
+            env={**os.environ, **self.env},
             start_new_session=True,
         )
         try:
-            wait_for_health(self.spec.health_url(), self.ready_timeout, self.process)
+            wait_for_health(self.health_url, self.ready_timeout, self.process)
         except ServerStartError:
             self.stop()
             raise
@@ -130,12 +131,28 @@ class ManagedServer:
             self._log_handle = None
         self.process = None
 
-    def __enter__(self) -> "ManagedServer":
+    def __enter__(self) -> "ManagedProcess":
         self.start()
         return self
 
     def __exit__(self, *exc_info: object) -> None:
         self.stop()
+
+
+class ManagedServer(ManagedProcess):
+    """A ``ManagedProcess`` that runs an inference server described by a ``ServerSpec``."""
+
+    def __init__(
+        self,
+        spec: ServerSpec,
+        log_path: str | Path,
+        ready_timeout: float = DEFAULT_READY_TIMEOUT_SECONDS,
+        python: str | None = None,
+    ) -> None:
+        super().__init__(
+            build_command(spec, python), spec.health_url(), log_path, build_env(spec), ready_timeout
+        )
+        self.spec = spec
 
 
 # ============= CLI =============

@@ -1,0 +1,25 @@
+# Prefill and decode disaggregation versus two colocated replicas on the same two GPUs.
+version: 1
+model: teacher
+transfer_backend: nixl
+ports:
+  prefill: 30000
+  decode: 30001
+  router: 8000
+  bootstrap: 8998
+router:
+  policy: round_robin
+workload:
+  long: { input_len: 4096, output_len: 256 }
+  chat: { input_len: 512, output_len: 256 }
+  long_fraction: 0.2
+  requests_per_rate: 200
+  # requests per second; edit to bracket the saturation point of the hardware in use
+  rates: [1.0, 2.0, 4.0]
+  seed: 11
+  # prompts are built from common words, about one token each; actual lengths are recorded
+  words_per_token: 1.0
+server:
+  mem_fraction: 0.85
+  max_model_len: 8192
+  ready_timeout_seconds: 3600
