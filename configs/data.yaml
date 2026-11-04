@@ -1,0 +1,54 @@
+# Dataset provenance and preparation settings. Revisions are pinned commit hashes.
+version: 1
+seed: 20260101
+
+training:
+  sft:
+    hub_id: HuggingFaceH4/ultrachat_200k
+    revision: 8049631c405ae6576f93f445c6b8166f76f5505a
+    split: train_sft
+    license: mit
+    max_rows: 20000
+    max_tokens: 2048
+    use: supervised fine-tuning of the 7B model
+  preferences:
+    hub_id: HuggingFaceH4/ultrafeedback_binarized
+    revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85
+    split: train_prefs
+    license: mit
+    max_rows: 20000
+    max_tokens: 2048
+    use: DPO, ORPO, and SimPO preference optimization
+  distillation_prompts:
+    hub_id: trl-lib/ultrafeedback-prompt
+    revision: 2f5b1bc3e81879a720a8c870a82d668923d8aebe
+    split: train
+    license: derived from openbmb/UltraFeedback (MIT)
+    max_rows: 20000
+    max_tokens: 1024
+    use: prompts for on-policy distillation and teacher completions
+
+judge:
+  hub_id: HuggingFaceH4/ultrafeedback_binarized
+  revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85
+  split: test_prefs
+  license: mit
+  n_prompts: 300
+  max_prompt_tokens: 1024
+  output: eval/judge_prompts.jsonl
+  use: pairwise judge win-rate evaluation
+
+# evaluation question sources removed from every training and prompt set
+decontamination:
+  near_duplicate:
+    num_perm: 128
+    rows_per_band: 4
+    shingle_words: 5
+    threshold: 0.8
+  benchmark_sources:
+    - { name: gsm8k, hub_id: openai/gsm8k, config: main, split: test, field: question }
+    - { name: mmlu, hub_id: cais/mmlu, config: all, split: test, field: question }
+    - { name: arc_challenge, hub_id: allenai/ai2_arc, config: ARC-Challenge, split: test, field: question }
+    - { name: hellaswag, hub_id: Rowan/hellaswag, config: null, split: validation, field: ctx }
+    - { name: truthfulqa, hub_id: truthfulqa/truthful_qa, config: generation, split: validation, field: question }
+    - { name: ifeval, hub_id: google/IFEval, config: null, split: train, field: prompt }

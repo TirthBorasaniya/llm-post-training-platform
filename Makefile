@@ -3,7 +3,7 @@ export UV_CACHE_DIR := $(CURDIR)/.cache/uv
 export UV_PYTHON_INSTALL_DIR := $(CURDIR)/.cache/uv-python
 export HF_HOME := $(CURDIR)/.cache/hf
 
-.PHONY: setup lint test clean sync pull-results setup-envs env-info compile-envs
+.PHONY: setup lint test clean sync pull-results setup-envs env-info compile-envs data judge-prompts
 
 JOB_RUN := scripts/run_job.sh
 
@@ -32,6 +32,12 @@ env-info:
 
 compile-envs:
 	scripts/compile_envs.sh
+
+data:
+	$(JOB_RUN) data
+
+judge-prompts:
+	uv run python scripts/prepare_data.py --judge-only
 
 clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache build dist

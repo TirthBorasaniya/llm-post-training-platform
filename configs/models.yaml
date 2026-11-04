@@ -1,0 +1,49 @@
+# Model registry. Hub models are pinned by revision; local entries are paths under the checkpoint root.
+version: 1
+
+models:
+  base_7b:
+    kind: hub
+    hub_id: Qwen/Qwen2.5-7B-Instruct
+    revision: a09a35458c702b33eeacc393d103063234e8bc28
+    license: apache-2.0
+  base_1_5b:
+    kind: hub
+    hub_id: Qwen/Qwen2.5-1.5B-Instruct
+    revision: 989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+    license: apache-2.0
+  tiny_reference:
+    kind: hub
+    hub_id: Qwen/Qwen2.5-0.5B-Instruct
+    revision: 7ae557604adf67be50417f59c2c2f167def9a775
+    license: apache-2.0
+  sft:
+    kind: local
+    path: sft/merged
+  dpo:
+    kind: local
+    path: dpo/merged
+  orpo:
+    kind: local
+    path: orpo/merged
+  simpo:
+    kind: local
+    path: simpo/merged
+  teacher:
+    kind: local
+    path: teacher/merged
+  sft_baseline_1_5b:
+    kind: local
+    path: sft_baseline/final
+  distilled_1_5b:
+    kind: local
+    path: distill/final
+
+# roles used by pipeline stages
+roles:
+  student_base: base_1_5b
+  reference: base_7b
+  teacher: teacher
+  distilled: distilled_1_5b
+  sft_baseline: sft_baseline_1_5b
+  tokenizer_source: base_7b
