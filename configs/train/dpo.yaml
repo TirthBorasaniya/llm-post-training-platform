@@ -1,0 +1,43 @@
+version: 1
+stage: dpo
+seed: 42
+
+model:
+  init: sft
+data:
+  file: preferences.jsonl
+lora:
+  r: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules: all-linear
+quantization:
+  enabled: true
+  quant_type: nf4
+  double_quant: true
+  compute_dtype: bfloat16
+optim:
+  learning_rate: 5.0e-6
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.1
+  num_train_epochs: 1
+  max_steps: -1
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  gradient_checkpointing: true
+lengths:
+  max_length: 2048
+objective:
+  beta: 0.1
+  simpo_gamma: 0.0
+checkpointing:
+  save_steps: 100
+  save_total_limit: 2
+  logging_steps: 10
+tracking:
+  enabled: true
+  experiment: llmplatform-alignment
+output:
+  subdir: dpo
