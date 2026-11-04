@@ -47,12 +47,14 @@ def cmd_benchmarks(args: argparse.Namespace) -> int:
     ckpt_root, data_root = _roots()
     config = load_benchmarks()
     models = load_models()
-    key = next(entry.model for entry in load_e1().checkpoints if entry.name == args.checkpoint)
+    entry = next(item for item in load_e1().checkpoints if item.name == args.checkpoint)
+    key = entry.model
     path = resolve_model(models, key, ckpt_root)
-    backend = args.backend or choose_backend(config)
+    backend = "chat-api" if args.base_url else (args.backend or choose_backend(config))
     work_dir = data_root / "lm_eval" / args.checkpoint
     score_dict = {}
-    for task in config.tasks:
+    selected = [task for task in config.tasks if entry.tasks is None or task.name in entry.tasks]
+    for task in selected:
         score_dict[task.name] = {
             "metric": task.metric,
             "num_fewshot": task.num_fewshot,
@@ -170,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
     bench.add_argument("--checkpoint", required=True)
     bench.add_argument("--backend", choices=["vllm", "hf"], default=None)
     bench.add_argument("--limit", type=int, default=None)
+    bench.add_argument("--base-url", default=None, help="evaluate a running chat server")
+    bench.add_argument("--served-model-name", default=None)
     bench.set_defaults(func=cmd_benchmarks)
     gen = sub.add_parser("generate")
     gen.add_argument("--checkpoint", required=True)

@@ -55,6 +55,7 @@ jobs:
   distill: { gpus: 1 }
   sft_baseline: { gpus: 1 }
   quantize: { gpus: 1 }
+  eval_variant: { gpus: 1 }
   gguf: { gpus: 0 }
   serve_bench: { gpus: 1 }
   agent_bench: { gpus: 1 }

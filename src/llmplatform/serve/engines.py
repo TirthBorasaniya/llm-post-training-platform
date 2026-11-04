@@ -54,6 +54,7 @@ class ServerSpec:
     disaggregation: DisaggregationSpec | None = None
     parallel: int = 2
     context_size: int = 4096
+    binary: list[str] | None = None
 
     def resolved_port(self) -> int:
         """Return the explicit port or the engine default."""
@@ -151,7 +152,7 @@ def vllm_command(spec: ServerSpec) -> list[str]:
 def llamacpp_command(spec: ServerSpec) -> list[str]:
     """Return ``llama-server`` arguments for a GGUF model."""
     command = [
-        LLAMACPP_BINARY,
+        *(spec.binary or [LLAMACPP_BINARY]),
         "-m",
         spec.model_path,
         "--host",

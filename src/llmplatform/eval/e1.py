@@ -84,7 +84,8 @@ def build_summary(results_root: str | Path, config: E1Config) -> dict[str, Any]:
     for entry in config.checkpoints:
         path = checkpoint_path(results_root, entry.name)
         if not path.is_file():
-            missing.append(entry.name)
+            if not entry.optional:
+                missing.append(entry.name)
             continue
         metrics = read_json(path)["metrics"]
         entries[entry.name] = {

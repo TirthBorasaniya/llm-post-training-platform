@@ -1,4 +1,6 @@
 # Checkpoints compared in the model quality experiment, in report order.
+# Quantized variants are served and evaluated on IFEval and the judge prompts only. FP8 and AWQ are
+# alternatives chosen by GPU generation, so both are optional; GGUF variants are required.
 version: 1
 checkpoints:
   - { name: base_7b, model: base_7b }
@@ -10,3 +12,10 @@ checkpoints:
   - { name: base_1_5b, model: base_1_5b }
   - { name: sft_baseline_1_5b, model: sft_baseline_1_5b }
   - { name: distilled_1_5b, model: distilled_1_5b }
+  - { name: teacher_fp8, model: teacher, tasks: [ifeval], optional: true, serve: { engine: sglang, quantization: fp8 } }
+  - { name: teacher_awq, model: teacher_awq, tasks: [ifeval], optional: true, serve: { engine: sglang } }
+  - { name: teacher_q4km, model: teacher_q4km, tasks: [ifeval], serve: { engine: llamacpp } }
+  - { name: distilled_1_5b_fp8, model: distilled_1_5b, tasks: [ifeval], optional: true, serve: { engine: sglang, quantization: fp8 } }
+  - { name: distilled_1_5b_awq, model: distilled_1_5b_awq, tasks: [ifeval], optional: true, serve: { engine: sglang } }
+  - { name: distilled_1_5b_q4km, model: distilled_1_5b_q4km, tasks: [ifeval], serve: { engine: llamacpp } }
+  - { name: base_1_5b_q4km, model: base_1_5b_q4km, tasks: [ifeval], serve: { engine: llamacpp } }

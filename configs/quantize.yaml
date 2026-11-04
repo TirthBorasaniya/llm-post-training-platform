@@ -1,0 +1,30 @@
+# Quantization and GGUF conversion settings.
+version: 1
+gpu:
+  # compute capability at or above this value (Ada 8.9, Hopper 9.0) uses online FP8 in the server
+  fp8_min_capability: 8.9
+  # older GPUs (Ampere) use AWQ 4-bit weights produced by llm-compressor
+  awq:
+    scheme: W4A16_ASYM
+    calibration_samples: 512
+    max_seq_length: 2048
+    calibration_file: sft.jsonl
+    duo_scaling: both
+    ignore: [lm_head]
+  models: [teacher, distilled_1_5b]
+gguf:
+  llama_cpp_tag: b12110
+  quant_type: Q4_K_M
+  outtype: f16
+  verify:
+    prompts:
+      - "Explain what a hash table is in two sentences."
+      - "Write a haiku about autumn rain."
+      - "What is 17 times 23? Show the steps."
+      - "Name three uses of the Python itertools module."
+      - "Summarize the plot of Romeo and Juliet in one paragraph."
+    n_predict: 48
+    timeout_seconds: 600
+  # the demo compares the distilled student with the base student, so both are converted
+  models: [teacher, distilled_1_5b, base_1_5b]
+output_subdir: quantized

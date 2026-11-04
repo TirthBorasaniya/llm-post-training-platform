@@ -1,0 +1,28 @@
+# Hub repositories. The namespace comes from HF_NAMESPACE, so no account name is stored here.
+version: 1
+# repositories are created private; set false only after reviewing the cards and files
+private: true
+repos:
+  teacher:
+    name: qwen2.5-7b-aligned
+    kind: model
+    source: teacher
+    base: base_7b
+  student:
+    name: qwen2.5-1.5b-distilled
+    kind: model
+    source: distilled_1_5b
+    base: base_1_5b
+  gguf:
+    name: qwen2.5-aligned-gguf
+    kind: gguf
+    files: [teacher_q4km, distilled_1_5b_q4km, base_1_5b_q4km]
+    base: base_7b
+ignore_patterns:
+  - "checkpoint-*"
+  - "optimizer.*"
+  - "*.pt"
+  - "runs/*"
+  - "step_metrics.jsonl"
+  - "ledger.json"
+  - "DONE"

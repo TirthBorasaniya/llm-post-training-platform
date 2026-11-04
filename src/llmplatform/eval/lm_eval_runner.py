@@ -90,6 +90,49 @@ def build_command(
     return command
 
 
+def build_api_command(
+    task: TaskSpec,
+    config: BenchmarksConfig,
+    model_name: str,
+    base_url: str,
+    output_dir: str | Path,
+    limit: int | None = None,
+    concurrency: int = 8,
+) -> list[str]:
+    """
+    Build the ``lm_eval`` command that queries a running OpenAI-compatible chat server.
+
+    Used for quantized variants served by SGLang or llama.cpp. ``base_url`` is the API root
+    ending in ``/v1``.
+    """
+    model_args = [
+        f"model={model_name}",
+        f"base_url={base_url.rstrip('/')}/chat/completions",
+        f"num_concurrent={concurrency}",
+        "max_retries=3",
+        "tokenized_requests=False",
+    ]
+    command = [
+        sys.executable,
+        "-m",
+        "lm_eval",
+        "--model",
+        "local-chat-completions",
+        "--model_args",
+        ",".join(model_args),
+        "--tasks",
+        task.name,
+        "--output_path",
+        str(output_dir),
+        "--apply_chat_template",
+    ]
+    if task.num_fewshot is not None:
+        command += ["--num_fewshot", str(task.num_fewshot)]
+    if limit is not None:
+        command += ["--limit", str(limit)]
+    return command
+
+
 # ============= Results =============
 
 
@@ -119,10 +162,17 @@ def run_task(
     output_dir: str | Path,
     revision: str | None = None,
     limit: int | None = None,
+    base_url: str | None = None,
+    served_model_name: str | None = None,
 ) -> float:
-    """Run one task and return its primary metric."""
+    """Run one task and return its primary metric; a ``base_url`` selects the chat API path."""
     task_dir = Path(output_dir) / task.name
-    command = build_command(task, config, model_path, backend, task_dir, revision, limit)
+    if base_url:
+        command = build_api_command(
+            task, config, served_model_name or model_path, base_url, task_dir, limit
+        )
+    else:
+        command = build_command(task, config, model_path, backend, task_dir, revision, limit)
     logger.info("running benchmark", extra={"task": task.name, "backend": backend})
     subprocess.run(command, check=True)
     return read_metric(find_results_file(task_dir), task.name, task.metric)

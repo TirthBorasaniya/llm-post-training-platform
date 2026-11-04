@@ -173,6 +173,11 @@ def spec_from_args(args: argparse.Namespace) -> ServerSpec:
             transfer_backend=args.transfer_backend,
             bootstrap_port=args.bootstrap_port,
         )
+    binary = None
+    if args.llama_cpp_dir:
+        from llmplatform.quantize.gguf import resolve_tool
+
+        binary = resolve_tool(args.llama_cpp_dir, "serve")
     return ServerSpec(
         engine=args.engine,
         model_path=args.model,
@@ -186,6 +191,7 @@ def spec_from_args(args: argparse.Namespace) -> ServerSpec:
         extra_args=args.server_arg,
         speculative=speculative,
         disaggregation=disaggregation,
+        binary=binary,
     )
 
 
@@ -212,6 +218,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--disaggregation-mode", choices=["prefill", "decode"], default=None)
     parser.add_argument("--transfer-backend", default="nixl")
     parser.add_argument("--bootstrap-port", type=int, default=None)
+    parser.add_argument("--llama-cpp-dir", default=None, help="built llama.cpp checkout")
     parser.add_argument("--log", default="logs/server.log")
     parser.add_argument("--ready-timeout", type=float, default=DEFAULT_READY_TIMEOUT_SECONDS)
     parser.add_argument(

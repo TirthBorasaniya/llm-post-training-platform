@@ -38,6 +38,21 @@ models:
   distilled_1_5b:
     kind: local
     path: distill/final
+  teacher_awq:
+    kind: local
+    path: quantized/teacher_awq
+  distilled_1_5b_awq:
+    kind: local
+    path: quantized/distilled_1_5b_awq
+  teacher_q4km:
+    kind: local
+    path: quantized/teacher-Q4_K_M.gguf
+  distilled_1_5b_q4km:
+    kind: local
+    path: quantized/distilled_1_5b-Q4_K_M.gguf
+  base_1_5b_q4km:
+    kind: local
+    path: quantized/base_1_5b-Q4_K_M.gguf
 
 # roles used by pipeline stages
 roles:

@@ -82,6 +82,15 @@ class JudgeConfig(ConfigModel):
     pricing: PricingSpec
 
 
+class ServeSpec(BaseModel):
+    """How a variant is served for evaluation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    engine: str
+    quantization: str | None = None
+
+
 class CheckpointEntry(BaseModel):
     """One checkpoint in the quality experiment."""
 
@@ -89,6 +98,9 @@ class CheckpointEntry(BaseModel):
 
     name: str
     model: str
+    tasks: list[str] | None = None
+    optional: bool = False
+    serve: ServeSpec | None = None
 
 
 class E1Config(ConfigModel):
