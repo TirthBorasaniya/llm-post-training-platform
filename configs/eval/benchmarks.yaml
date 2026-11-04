@@ -1,0 +1,15 @@
+# lm-evaluation-harness settings. One harness invocation per task, because few-shot counts differ.
+version: 1
+apply_chat_template: true
+batch_size: auto
+dtype: bfloat16
+vllm_gpu_memory_utilization: 0.85
+# the first backend whose environment exists is used; the choice is recorded in the results
+backend_preference: [vllm, hf]
+tasks:
+  - { name: ifeval, num_fewshot: null, metric: "prompt_level_strict_acc,none" }
+  - { name: gsm8k, num_fewshot: 5, metric: "exact_match,strict-match" }
+  - { name: mmlu, num_fewshot: 5, metric: "acc,none" }
+  - { name: arc_challenge, num_fewshot: 25, metric: "acc_norm,none" }
+  - { name: hellaswag, num_fewshot: 10, metric: "acc_norm,none" }
+  - { name: truthfulqa_mc2, num_fewshot: 0, metric: "acc,none" }

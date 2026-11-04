@@ -5,7 +5,7 @@ seed: 20260101
 training:
   sft:
     hub_id: HuggingFaceH4/ultrachat_200k
-    revision: 8049631c405ae6576f93f445c6b8166f76f5505a
+    revision: 8049631c405ae6576f93f445c6b8166f76f5505a  # pragma: allowlist secret
     split: train_sft
     license: mit
     max_rows: 20000
@@ -13,7 +13,7 @@ training:
     use: supervised fine-tuning of the 7B model
   preferences:
     hub_id: HuggingFaceH4/ultrafeedback_binarized
-    revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85
+    revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85  # pragma: allowlist secret
     split: train_prefs
     license: mit
     max_rows: 20000
@@ -21,7 +21,7 @@ training:
     use: DPO, ORPO, and SimPO preference optimization
   distillation_prompts:
     hub_id: trl-lib/ultrafeedback-prompt
-    revision: 2f5b1bc3e81879a720a8c870a82d668923d8aebe
+    revision: 2f5b1bc3e81879a720a8c870a82d668923d8aebe  # pragma: allowlist secret
     split: train
     license: derived from openbmb/UltraFeedback (MIT)
     max_rows: 20000
@@ -30,7 +30,7 @@ training:
 
 judge:
   hub_id: HuggingFaceH4/ultrafeedback_binarized
-  revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85
+  revision: 3949bf5f8c17c394422ccfab0c31ea9c20bdeb85  # pragma: allowlist secret
   split: test_prefs
   license: mit
   n_prompts: 300

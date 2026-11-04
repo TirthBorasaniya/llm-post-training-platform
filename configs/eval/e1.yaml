@@ -1,0 +1,12 @@
+# Checkpoints compared in the model quality experiment, in report order.
+version: 1
+checkpoints:
+  - { name: base_7b, model: base_7b }
+  - { name: sft, model: sft }
+  - { name: dpo, model: dpo }
+  - { name: orpo, model: orpo }
+  - { name: simpo, model: simpo }
+  - { name: teacher, model: teacher }
+  - { name: base_1_5b, model: base_1_5b }
+  - { name: sft_baseline_1_5b, model: sft_baseline_1_5b }
+  - { name: distilled_1_5b, model: distilled_1_5b }

@@ -3,7 +3,7 @@ export UV_CACHE_DIR := $(CURDIR)/.cache/uv
 export UV_PYTHON_INSTALL_DIR := $(CURDIR)/.cache/uv-python
 export HF_HOME := $(CURDIR)/.cache/hf
 
-.PHONY: setup lint test clean sync pull-results setup-envs env-info compile-envs data judge-prompts
+.PHONY: setup lint test check test-slow clean sync pull-results setup-envs env-info compile-envs data judge-prompts
 
 JOB_RUN := scripts/run_job.sh
 
@@ -17,6 +17,11 @@ lint:
 
 test:
 	uv run pytest
+
+test-slow:
+	uv run pytest -m slow tests/e2e
+
+check: lint test
 
 sync:
 	scripts/sync.sh

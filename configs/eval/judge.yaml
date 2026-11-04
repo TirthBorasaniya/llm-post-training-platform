@@ -1,0 +1,29 @@
+# Pairwise judge and response generation settings.
+version: 1
+judge_model: openai/gpt-oss-120b
+base_url: https://api.groq.com/openai/v1
+temperature: 0.0
+max_completion_tokens: 4096
+extra_body:
+  reasoning_effort: medium
+concurrency: 4
+max_retries: 8
+request_timeout_seconds: 180
+template_version: 1
+cache_dir: judge_cache
+reference: base_7b
+bootstrap:
+  resamples: 2000
+  seed: 20260101
+  confidence: 0.95
+generation:
+  temperature: 0.0
+  max_new_tokens: 1024
+  batch_size: 8
+  prompts_file: eval/judge_prompts.jsonl
+# fill from the provider's models page and record the retrieval date; costs are omitted while null
+pricing:
+  input_per_million_usd: null
+  output_per_million_usd: null
+  source: null
+  retrieved: null
