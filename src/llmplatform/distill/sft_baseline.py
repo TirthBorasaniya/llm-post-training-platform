@@ -33,7 +33,7 @@ def build_sft_args(
 ) -> dict[str, Any]:
     """Return the ``SFTConfig`` arguments of the baseline run."""
     optim = config.optim
-    dtype = "float32" if o_cpu else "bfloat16"
+    dtype = "float32" if o_cpu else config.student_dtype
     return {
         "output_dir": str(output_dir),
         "learning_rate": optim.learning_rate,

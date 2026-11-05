@@ -70,7 +70,7 @@ SFT, DPO, ORPO, and SimPO share one trainer module and differ only in the object
 
 ### Distillation
 
-`scripts/check_vocab.py` verifies that the teacher and student tokenizers are identical and shorter than both padded embedding sizes. When the padded sizes differ, the teacher's embeddings are resized to the student's and its logits on real tokens are compared before and after. `scripts/distill.py opd` then runs TRL's `DistillationTrainer` with reverse KL on-policy distillation, explicit bf16 weights, time-based checkpoints, and a guard on `completions/clipped_ratio`. A GPU-hour ledger accumulates across chained jobs. The baseline generates teacher completions through SGLang and trains the student with SFT until it has spent the same GPU-hours.
+`scripts/check_vocab.py` verifies that the teacher and student tokenizers are identical and shorter than both padded embedding sizes. When the padded sizes differ, the teacher's embeddings are resized to the student's and its logits on real tokens are compared before and after. `scripts/distill.py opd` then runs TRL's `DistillationTrainer` with reverse KL on-policy distillation, float32 student weights with bf16 autocast, time-based checkpoints, and a guard on `completions/clipped_ratio`. A GPU-hour ledger accumulates across chained jobs. The baseline generates teacher completions through SGLang and trains the student with SFT until it has spent the same GPU-hours.
 
 ### Quantization and publishing
 
@@ -179,7 +179,7 @@ Decisions and the alternatives considered are recorded in [DECISIONS.md](DECISIO
 - The Hugging Face baseline measures static batches; concurrency equals batch size and all sequences of a batch share a time to first token.
 - Agent traces use synthetic assistant turns and synthetic tool results so that prefixes are identical across runs; only the system prompts and tool schemas are real.
 - ORPO and SimPO use the experimental trainers of the pinned TRL release.
-- Pure bf16 student weights at a learning rate of 1e-6 can lose small updates to rounding. `student_training.dtype` selects float32 weights when memory allows.
+- The student trains with float32 weights and bf16 autocast, which costs about 24 GB for the 1.5B model; `student_training.dtype: bfloat16` trades that memory for possible rounding loss at a learning rate of 1e-6.
 - The disaggregation SLO checks chat-class time to first token and overall inter-token latency; long-prompt time to first token is reported but not part of the SLO.
 - A kind run on CPU shows deployment mechanics and autoscaling, not GPU performance. Every Kubernetes table names its hardware.
 - Prompt lengths in the disaggregation workload are approximate (about one token per word); measured prompt lengths are recorded in the results.

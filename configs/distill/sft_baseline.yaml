@@ -3,6 +3,8 @@ version: 1
 seed: 42
 models:
   student: base_1_5b
+# same weight dtype as the distilled student; compute runs in bf16 autocast
+student_dtype: float32
 generation:
   # teacher completions for the distillation prompts, produced through an OpenAI-compatible server
   prompts_file: distillation_prompts.jsonl

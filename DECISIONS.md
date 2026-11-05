@@ -42,12 +42,12 @@ Decision: After verifying identical tokenizers and that the tokenizer is shorter
 Alternatives: Padding the student up to the teacher (rejected: it changes the student that is published), a custom loss over the shared vocabulary (rejected: it reimplements the trainer).
 Consequences: The dropped rows are untrained padding, and the recorded mass on them shows how little the teacher distribution changes.
 
-## D-007: Explicit weight dtype for the student
+## D-007: Float32 student weights with bf16 autocast
 Status: accepted (2026-11-04)
 Context: The trainer loads string-specified models in float32 unless told otherwise, which doubles memory.
-Decision: `model_init_kwargs` sets the dtype explicitly, bf16 by default, and the configuration exposes `student_training.dtype`.
-Alternatives: Leaving the trainer default (rejected: unannounced memory doubling), float32 master weights always (rejected: it needs memory the single-GPU path may not have).
-Consequences: At a learning rate of 1e-6 pure bf16 weights can lose small updates; float32 is available when memory allows.
+Decision: `model_init_kwargs` sets the dtype explicitly. The student's master weights are float32 and compute runs in bf16 autocast, so updates at a learning rate of 1e-6 are not rounded away. The SFT baseline uses the same weight dtype, and both are configurable (`student_training.dtype`, `student_dtype`).
+Alternatives: Pure bf16 weights (rejected: small updates at 1e-6 can be lost to rounding), leaving the trainer default implicit (rejected: the dtype should be stated, not inherited).
+Consequences: Weights, gradients, and optimizer state for the 1.5B student take about 24 GB, so full fine-tuning still fits an 80 GB GPU alongside the 7B teacher and colocated generation; `student_training.dtype: bfloat16` is the lower-memory option.
 
 ## D-008: The SFT baseline stops at the distillation GPU-hours
 Status: accepted (2026-11-04)

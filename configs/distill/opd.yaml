@@ -30,8 +30,9 @@ vllm:
 student_training:
   # full fine-tuning needs an 80 GB or larger GPU; lora is the documented fallback
   mode: full
-  # explicit weight dtype; the trainer would otherwise load string-specified models in float32
-  dtype: bfloat16
+  # float32 master weights so updates at a learning rate of 1e-6 are not rounded away;
+  # compute still runs in bf16 autocast
+  dtype: float32
   lora_r: 64
   lora_alpha: 128
   lora_dropout: 0.05

@@ -196,7 +196,8 @@ def test_opd_args_follow_the_protocol() -> None:
     assert args["learning_rate"] == 1e-6
     assert args["max_completion_length"] == 1024
     assert args["per_device_train_batch_size"] == 4 and args["gradient_accumulation_steps"] == 8
-    assert args["model_init_kwargs"] == {"dtype": "bfloat16"}
+    assert args["model_init_kwargs"] == {"dtype": "float32"}
+    assert args["bf16"] is True
     assert args["vllm_mode"] == "colocate" and args["vllm_gpu_memory_utilization"] == 0.3
     assert args["gradient_checkpointing"] is True and args["bf16"] is True
     assert config.data.max_prompts == 20000 and config.optim.num_train_epochs == 1
@@ -232,7 +233,7 @@ def test_sft_baseline_args() -> None:
     config = load_sft_baseline()
     args = build_sft_args(config, Path("/o"))
     assert args["lr_scheduler_type"] == "constant_with_warmup"
-    assert args["model_init_kwargs"] == {"dtype": "bfloat16"}
+    assert args["model_init_kwargs"] == {"dtype": "float32"} and args["bf16"] is True
     assert config.generation.keep_truncated is False
 
 

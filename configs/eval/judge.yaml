@@ -21,9 +21,9 @@ generation:
   max_new_tokens: 1024
   batch_size: 8
   prompts_file: eval/judge_prompts.jsonl
-# fill from the provider's models page and record the retrieval date; costs are omitted while null
+# USD per million tokens for the judge model, from the provider's models page
 pricing:
-  input_per_million_usd: null
-  output_per_million_usd: null
-  source: null
-  retrieved: null
+  input_per_million_usd: 0.15
+  output_per_million_usd: 0.60
+  source: console.groq.com/docs/models
+  retrieved: "2026-10-15"

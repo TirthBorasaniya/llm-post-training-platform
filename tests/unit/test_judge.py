@@ -233,7 +233,10 @@ def test_run_judgment_end_to_end(tmp_path: Path) -> None:
     assert metrics["candidate_length"]["mean_words"] == 3
     assert metrics["reference_length"]["mean_tokens"] == 1
     assert metrics["judge_usage"]["calls"] == 8
-    assert metrics["judge_cost_usd"] is None
+    # eight calls of 10 prompt and 5 completion tokens at 0.15 and 0.60 USD per million
+    assert metrics["judge_cost_usd"] == pytest.approx((80 * 0.15 + 40 * 0.60) / 1e6)
+    assert metrics["pricing_source"] == "console.groq.com/docs/models"
+    assert metrics["pricing_retrieved"] == "2026-10-15"
     limited = run_judgment(
         client,
         load_judge_config(),
@@ -246,16 +249,23 @@ def test_run_judgment_end_to_end(tmp_path: Path) -> None:
     assert limited["judge_usage"]["cached_calls"] == 4
 
 
-def test_cost_requires_configured_prices() -> None:
+def test_configured_prices_are_the_documented_ones() -> None:
+    pricing = load_judge_config().pricing
+    assert (pricing.input_per_million_usd, pricing.output_per_million_usd) == (0.15, 0.60)
+    assert pricing.source == "console.groq.com/docs/models" and pricing.retrieved == "2026-10-15"
+    totals = {"prompt_tokens": 1_000_000, "completion_tokens": 500_000}
+    assert estimated_cost(load_judge_config(), totals) == pytest.approx(0.45)
+
+
+def test_cost_is_omitted_without_prices() -> None:
     config = load_judge_config()
     totals = {"prompt_tokens": 1_000_000, "completion_tokens": 500_000}
-    assert estimated_cost(config, totals) is None
-    priced = config.model_copy(
+    unpriced = config.model_copy(
         update={
             "pricing": config.pricing.model_copy(
-                update={"input_per_million_usd": 0.1, "output_per_million_usd": 0.4}
+                update={"input_per_million_usd": None, "output_per_million_usd": None}
             )
         }
     )
-    assert estimated_cost(priced, totals) == pytest.approx(0.3)
+    assert estimated_cost(unpriced, totals) is None
     assert length_stats([{"response": "a b"}])["mean_tokens"] is None

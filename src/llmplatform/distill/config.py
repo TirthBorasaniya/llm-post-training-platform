@@ -70,7 +70,7 @@ class StudentSection(_Section):
     """Full fine-tuning or the LoRA fallback."""
 
     mode: Literal["full", "lora"]
-    dtype: Literal["bfloat16", "float32"] = "bfloat16"
+    dtype: Literal["bfloat16", "float32"] = "float32"
     lora_r: int
     lora_alpha: int
     lora_dropout: float
@@ -174,6 +174,7 @@ class SftBaselineConfig(ConfigModel):
 
     seed: int
     models: StudentOnly
+    student_dtype: Literal["bfloat16", "float32"] = "float32"
     generation: TeacherGenSection
     optim: SftOptimSection
     lengths: LengthSection
